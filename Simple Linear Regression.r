@@ -14,7 +14,7 @@ crimemodel <- lm(Crime~., data = crimedata)
 #view the model
 summary(crimemodel)
 
-#build data frame with data from HW question
+#build data frame with data
 hwdataframe <- data.frame(M = 14.0, 
                           So = 0,
                           Ed = 10.0,
@@ -32,6 +32,6 @@ hwdataframe <- data.frame(M = 14.0,
                           Time = 39.0
 )
 
-#Use hw data to predict how my model for crime works
+#Use data to predict how my model for crime works
 hw_crimepredict <- predict(crimemodel, hwdataframe)
 hw_crimepredict
