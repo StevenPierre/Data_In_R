@@ -1,0 +1,381 @@
+---
+title: "Midterm Exam 2 - Open Book Section (R) - Part 2 Destine"
+output:
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+## update.packages(checkBuilt =TRUE, ask = FALSE)
+```
+## Instructions
+
+The R Markdown/Jupyter Notebook file includes the questions, the empty code chunk sections for your code, and the text blocks for your responses. Answer the questions below by completing the R Markdown/Jupyter Notebook file. You may make slight adjustments to get the file to knit/convert but otherwise keep the formatting the same. Once you've finished answering the questions, submit your responses in a single knitted file as *HTML* only.
+
+There are 10 questions total, each worth between 3 and 11 points. Partial credit may be given if your code is correct, but your conclusion is incorrect or vice versa. 
+
+*Next Steps:*
+
+1. Save the .Rmd/.ipnyb file in your R working directory - the same directory where you will download the "beer.csv" data file into. Having both files in the same directory will help in reading the "beer.csv" file. 
+
+2. Read the question and create the R code necessary within the code chunk section immediately below each question. Knitting this file will generate the output and insert it into the section below the code chunk. 
+
+3. Type your answer to the questions in the text block provided immediately after the response prompt. 
+
+4. Once you've finished answering all questions, knit this file and submit the knitted file *as HTML* on Canvas.
+       
+       * Make sure to start submission of the exam at least 10 minutes before the end of the exam time. It is your responsibility to keep track of your time and submit before the time limit. 
+
+       * If you are unable to knit your file as HTML for whatever reason, you may upload your Rmd/ipynb/PDF/Word file instead. However, you will be penalized 10%.
+
+       * If you are unable to upload your exam file for whatever reason, you may IMMEDIATELY attach the file to the exam page as a comment via Grades-> Midterm Exam 2 - Open Book Section (R) - Part 2 -> Comment box. 
+
+       * Note that you will be penalized 10% (or more) if the submission is made within 5 minutes after the exam time has expired and a higher penalty if more than 5 minutes. Furthermore, you will receive zero points if the submission is made after 15 minutes of the exam time expiring. We will not allow later submissions or re-taking of the exam.
+
+       * If you upload your file after the exam closes, let the instructors know via a private Piazza post. Please DON'T attach the exam file via a private Piazza post to the instructors since you could compromise the exam process. Any submission received via Piazza will not be considered.
+
+
+### Mock Example Question
+
+This will be the exam question - each question is already copied from Canvas and inserted into individual text blocks below, *you do not need to copy/paste the questions from the online Canvas exam.*
+
+```{r}
+# Example code chunk area. Enter your code below the comment
+
+```
+
+**Mock Response to Example Question**:  This is the section where you type your written answers to the question. Depending on the question asked, your typed response may be a number, a list of variables, a few sentences, or a combination of these elements. 
+
+**Ready? Let's begin.**
+
+
+## Background
+
+In this exam, you will be considering various attributes of beer and using the given data to predict its quality.
+
+The data in "beer.csv" contains 1599 data points with the following 12 attributes:
+
+1. *humulone*: amount of humulones which is an alpha acid and contributes to the bitterness of beer
+2. *lupulones*: amount of lupulones which is a beta acid and contributes to the taste of beer
+3. *potassium*: amount of potassium 
+4. *sodium*: amount of sodium 
+5. *chlorides*: amount of chlorides
+6. *calcium*: amount of calcium 
+7. *magnesium*: amount of magnesium 
+8. *density*: density
+9. *pH*: pH
+10. *sulphates*: amount of sulphates 
+11. *alcohol*: percent alcohol content 
+12. *quality*: score between 0 and 1000
+
+## Read the data
+
+Read the data and answer the questions below using the supplied R Markdown file.
+
+```{r}
+# Load relevant libraries (add here if needed)
+library(car)
+library(aod)
+library(MASS)
+
+# Read the data set
+beer_full = read.csv("beer.csv", header = TRUE)
+
+# Split the data into training and testing sets
+set.seed(6414)
+sample_size = floor(0.8 * nrow(beer_full))
+picked = sample(seq_len(nrow(beer_full)), size = sample_size)
+
+beer = beer_full[picked,]
+beer_test = beer_full[-picked,]
+```
+
+**Note:** Use *beer* as your data set for the following questions unless otherwise stated, and treat all variables as quantitative variables.
+
+
+## Linear Regression
+
+
+### Question 1 - 6 points
+
+a) Create a histogram of the variable *quality*. Based on this plot, would it be appropriate to model this response variable using a multiple linear regression? Explain your reasoning. Consider the shape of the distribution, error analysis, and anything else you can think of. 
+```{r}
+# Code to create a histogram
+hist(beer$quality)
+```
+
+**Response to Question 1a)**: It would be appropriate to model this response variable using a multiple linear regression because the distribution appears to be normal.
+
+b) Create a linear regression model, called **model1**, with *quality* as the response variable and all other variables as the predictors. Include an intercept. Display the summary table of the model. *Remember to use beer as your data set.*
+
+```{r}
+# Code to create model and summary
+model1 <- lm(beer$quality~.,data = beer)
+summary(model1)
+```
+
+c) Is the overall regression significant at the $\alpha = 0.01$ level? Explain your reasoning, including a statement of the null and alternative hypotheses.
+
+**Response to Question 1c)**: Yes, the overall regression is significant at the 0.01 alpha level because the p-value of <2.2e-16 is less than the alpha level and close to 0. We can reject the null hypothesis that quality has no relation to our other variables.
+
+### Question 2 - 4 points
+
+Using **model1**, calculate and plot the Cook's distance for each point. Based on this plot, evaluate whether there are any concerning outliers. Use a threshold of 1 for cook's distance. Explain your reasoning. *Do not remove any data points.* 
+
+```{r}
+# Code to calculate Cook's distance and plot
+cook<- cooks.distance(model1)
+plot(cook,type = "h", lwd=3, ylab= "Cook's Distance") + abline(h=1)
+```
+```{r}
+cat("Observation", which(cook>1), "has the highest cook's distance")
+which.max(cook)
+```
+**Response to Question 2**: There are 2 outliers but they do not seem to be influential. Using a threshold of 1, I would not suggest that these outliers are concerning.Outliers are rows 1,236 and 257.
+
+
+### Question 3 - 7 points
+
+Using **model1**, create and interpret the following plots to determine whether the multiple linear regression (MLR) assumptions hold. State which assumption(s) can be assessed by each plot and comment on whether there are any apparent departures from the assumptions.
+
+ * Plot of the standardized residuals, $r_i$, versus the fitted values, $\hat y_i$. 
+
+ * Q-Q plot and histogram of the standardized residuals, $r_i$. 
+
+```{r}
+# Code to create plots to check assumptions
+resid.model1 <- resid(model1, type="deviance")
+plot(model1$fitted.values, resid.model1, xlab="Fitted Values", ylab= "Standardardized Residuals")
+```
+```{r}
+hist(resid.model1, xlab="Residuals")
+```
+```{r}
+qqPlot(resid.model1, ylab = "Residuals")
+```
+
+**Response to Question 3**: 
+
+* Plot of the standardized residuals, $r_i$, versus the fitted values, $\hat y_i$. 
+
+Model Assumption(s) it checks: Independence and constant variance.
+
+Interpretation: Values are not scattered around 0. Constant variance does not hold because the spread of the residuals is not equal across the fitted values.
+
+* Q-Q plot and histogram of the standardized residuals, $r_i$. 
+
+Model Assumption(s) it checks: Normality
+
+Interpretation: Histogram looks to be normally distributed.Left tail of the qqplot curves a bit so normality does not fully hold.
+
+
+### Question 4 - 3 points
+
+Using **model1**, find the optimal choice of $\lambda$, rounded to the nearest $0.5$, for a Box-Cox transformation on the response variable. What transformation, if any, should be applied according to this $\lambda$? *Do not fit a new model.*
+
+```{r}
+# Code for finding optimal lambda for Box-Cox transformation
+boxxxx <- boxcox(model1)
+lambada <- boxxxx$x[which.max(boxxxx$y)]
+lambada
+```
+
+**Response to Question 4**: The lambda is approximately 0.9 so I would not apply any transformation.
+
+### Question 5 - 4 points
+
+a) Using **model1**, calculate the variance inflation factor (VIF) for each predicting variable.
+
+b) What is the value of the VIF threshold $\max\{10, \frac{1}{1-R^2_{\text{model1}}}\}$ for this model?
+
+```{r}
+# Code to calculate VIF and VIF threshold
+vif(model1)
+```
+```{r}
+max(10, 1/(1-summary(model1)$r.squared))
+```
+
+**Response to Question 5b)**: 10 is the value of the VIF threshold.
+
+c) Do any of the VIF values exceed the threshold? Based on these results, does multi-collinearity seem to be a concern in this model? Refer to the VIF threshold from 5b.
+
+**Response to Question 5c)**: None of the VIF values exceed the threshold. Based on the results multi-cllinearity does not seem to be a problem in this model.
+
+
+## Poisson Regression
+
+
+### Question 6 - 6 points
+
+a) Fit a Poisson regression model, called **model2**, with *quality* as the response variable and all other variables as the predictors. Include an intercept. Display the summary table of the model. *Remember to use beer as your data set.*
+
+```{r}
+# Code to fit model
+model2 <- glm(beer$quality~., family = "poisson", data = beer)
+summary(model2)
+```
+
+b) Perform a test for the overall regression of the model. Does the overall regression have explanatory power at the $\alpha = 0.05$ level? Explain your reasoning, including a statement of the null and alternative hypotheses.
+
+```{r}
+# Code to perform test for the overall regression
+gstat = model2$null.deviance - deviance(model2)
+df = length(coef(model2))-1
+cbind(gstat, pvalue=1-pchisq(gstat,df))
+```
+
+**Response to Question 6b)**: Yes, the overall regression has explanatory power at the 0.05 alpha level. The p-value is 0 so at least one predictor variable explains variability. We can reject the null hypothesis that none of the predictor variables explain variability in the overall regression.
+
+
+### Question 7 - 8 points
+
+a) What are the estimated regression coefficients for the variable *chlorides* in both **model1** and **model2**? Interpret these estimated regression coefficients in the context of each model.
+
+```{r}
+# Code to extract estimated coefficients (if needed)
+summary(model1)
+```
+```{r}
+# Code to extract estimated coefficients (if needed)
+summary(model2)
+```
+
+**Response to Question 7a)**: 
+Model1 estimated regression coefficient is -1.972e+02. In model1 there is a 197 unit decrease in in chlorides for each unit of the intercept, holding all other variables constant.
+
+Model2 estimated regression coefficient is -3.486e-01. In mondel2 the log odds of cholorides present is 34% less.
+
+b) Calculate 90% confidence intervals for the *density* coefficient in both **model1** and **model2**. Using these confidence intervals, is the coefficient statistically different from zero at the $\alpha = 0.10$ significance level, given all other predictors in the model? Explain.
+
+```{r}
+# Code to compute confidence intervals
+confint(model1,"density", level = .90)
+```
+```{r}
+# Code to compute confidence intervals
+confint(model2,"density", level = .90)
+```
+
+**Response to Question 7b)**: The coefficient is not statistically different from zero at the alpha level of 0.10 for model1 because it does include 0. For model2 it is statistically different from zero because it does not include 0.
+
+
+### Question 8 - 6 points
+
+a) Estimate the dispersion parameter for **model2**. Is this an overdispersed model? Explain.
+
+```{r}
+# Code to estimate dispersion parameter
+model2$deviance/model2$df.res
+```
+
+**Response to Question 8a)**: Yes, this is an overdisperesed model because the estimated dispersion parameter is greater than 2. 
+
+b) Perform a goodness-of-fit hypothesis test for *model2* using the deviance residuals and $\alpha = 0.05$. What do you conclude? Explain.
+
+```{r}
+# Code to perform hypothesis test
+with(model2, cbind(res.deviance= deviance, df= df.residual, p= 1-
+pchisq(deviance,df.residual)))
+```
+
+**Response to Question 8b)**: The p-value is 0 so the data does not have a good fit. We can reject the null hypothesis since the p-value is less than alpha.
+
+c) Based on the previous assessments, what would you suggest to improve the fit of the model and why? *One suggestion will suffice.*
+
+**Response to Question 8c)**: I would suggest another transformation on the data as well as removing some of the outliers.
+
+
+### Question 9 - 5 points
+
+Is at least one of the variables *pH*, *sulphates*, and *alcohol* statistically significant at the $\alpha = 0.01$ level, given all of the other variables in **model2** are included? Perform a testing for subset of coefficients to answer this question. Explain your reasoning, including a statement of the null and alternative hypotheses.
+
+```{r}
+# Code to perform testing
+
+```
+
+**Response to Question 9**: 
+
+
+## Prediction
+
+
+### Question 10 - 11 points
+
+a) Estimate *quality* for *beer_test* using both **model1** and **model2**. Use the R function "head()" to show the first few predictions.
+
+```{r}
+# Code to calculate estimates
+predictm1 <- predict(model1, newdata=beer_test)
+head(predictm1)
+```
+```{r}
+# Code to calculate estimates
+predictm2 <- predict(model2, newdata=beer_test, type='response')
+head(predictm2)
+```
+
+b) Calculate the mean absolute prediction error (MAE) and the precision error (PM) of each model.
+
+```{r}
+# Code to calculate MAE, and PM
+maes=c(mean(abs(predictm1-beer_test$quality)),
+mean(abs(predictm2-beer_test$quality)))
+cat('\nMAES:', maes)
+```
+```{r}
+sum((predictm1-
+  beer_test$quality)^2)/sum((beer_test$quality+mean(beer_test$quality))^2)
+```
+```{r}
+sum((predictm2-
+  beer_test$quality)^2)/sum((beer_test$quality+mean(beer_test$quality))^2)
+```
+**Response to Question 10b)**:
+
+*Model 1 - Mean Absolute Prediction Error (MAE)*: 57.07129
+
+*Model 2 - Mean Absolute Prediction Error (MAE)*: 56.96796
+
+*Model 1 - Precision Measure (PM)*: 0.004509974
+
+*Model 2 - Precision Measure (PM)*: 0.004500527
+
+
+c) Compare the results from part (b). How did each model perform? Did one perform better than the other?
+
+**Response to Question 10c)**: 
+
+
+d) Given a new beer with the following attributes, predict its quality using each model. How do the predictions differ?
+
+humulone = 5.90,
+lupulones = 1.53,
+potassium = 0.82,
+sodium = 3.63,
+chlorides = 0.32,
+calcium = 33.94,
+magnesium = 254.24,
+density = 0.99,
+pH = 3.58,
+sulphates = 1.33,
+alcohol = 9.65
+
+```{r}
+# Code to calculate predictions
+
+```
+
+**Response to Question 10d)**: 
+
+
+**The end**
+
+
+
+
+
+
